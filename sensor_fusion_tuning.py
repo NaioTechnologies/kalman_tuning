@@ -305,10 +305,13 @@ for i in range(len(time)):
 		gps_position_received[i] = False
 		# visu_velocity_measure_received[i] = False
 
-	if(abs(visu_velocity_x[i])>0.55 or abs(visu_velocity_y[i])>0.55):
+	if(fabs(visu_velocity_x[i])>0.55 or fabs(visu_velocity_y[i])>0.55):
 		visu_velocity_measure_received[i] = False
-	if(abs(meca_velocity_x[i])>0.5):
+		visu_position_measure_received[i] = False
+
+	if(fabs(meca_velocity_x[i])>0.55):
 		meca_position_measure_received[i] = False
+
 	# gps_position_received[i] = False
 
 	if( not gps_position_received[i] ):
