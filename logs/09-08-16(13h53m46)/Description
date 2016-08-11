@@ -1,0 +1,16 @@
+Chez Xavier le 09-08-16
+
+Manip:
+- Sors le robot de la serre du fond pour l'amener devant une rangee
+- Avance le robot en marche arriere dans la rangee
+- Lance le robot en demi-tour ré-entrée dans la même rangée
+- glissement latéral vers la droite du robot, dès que les piquets rouges sont dépassés
+
+Video sur le NAS: 
+smb://nas-naio.local/radisrepo/videos_tests_uturn_more_reliable
+
+Resultats:
+- glissements détectés: Oz recule pour compenser son glissement
+- 1er essai de réentrée raté, 2nd réussi => glissements pas encore gérés par le 1/2 tour
+
+
