@@ -14,7 +14,7 @@ imu_reseted = 0.0
 with open('file.csv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
     # spamwriter.writerow(['time'] + ['dt'] + ['imu_reseted'] + ['gps_position_received'] + ['initial_heading'] + ['gps_x'] + ['gps_y'] + ['om_gauche'] + ['om_droit'] + ['meca_position_measure_received'] + ['meca_fiab'] + ['meca_position_x'] + ['meca_position_y'] + ['meca_velocity_x'] + ['visu_position_measure_received'] + ['visu_fiab'] + ['visu_position_x'] + ['visu_position_y'] + ['visu_velocity_measure_received'] + ['visu_velocity_x'] + ['visu_velocity_y'] + ['imu_accel_measure_received'] + ['accel_mss_x'] + ['accel_mss_y'] + ['imu_theta_received'] + ['heading'] + ['imu_theta'] + ['imu_yaw_velocity'] + ['kalman_position_x']+ ['kalman_position_y'])
-    spamwriter.writerow(['time'] + ['dt'] + ['imu_reseted'] + ['gps_position_received'] + ['initial_heading'] + ['gps_x'] + ['gps_y'] + ['om_gauche'] + ['om_droit'] + ['meca_position_measure_received'] + ['meca_fiab'] + ['meca_position_x'] + ['meca_position_y'] + ['meca_velocity_x'] + ['visu_position_measure_received'] + ['visu_fiab'] + ['visu_position_x'] + ['visu_position_y'] + ['visu_velocity_measure_received'] + ['visu_velocity_x'] + ['visu_velocity_y'] + ['imu_accel_measure_received'] + ['accel_mss_x'] + ['accel_mss_y'] + ['imu_theta_received'] + ['imu_theta'] + ['imu_yaw_velocity'] + ['kalman_position_x']+ ['kalman_position_y'])
+    spamwriter.writerow(['time'] + ['dt'] + ['imu_reseted'] + ['gps_position_received'] + ['initial_heading'] + ['gps_x'] + ['gps_y'] + ['gps_speed'] + ['gps_says_robot_moving'] + ['moving_motors'] + ['om_gauche'] + ['om_droit'] + ['meca_position_measure_received'] + ['meca_fiab'] + ['meca_position_x'] + ['meca_position_y'] + ['meca_velocity_x'] + ['visu_position_measure_received'] + ['visu_fiab'] + ['visu_position_x'] + ['visu_position_y'] + ['visu_velocity_measure_received'] + ['visu_velocity_x'] + ['visu_velocity_y'] + ['imu_accel_measure_received'] + ['accel_mss_x'] + ['accel_mss_y'] + ['imu_theta_received'] + ['imu_theta'] + ['imu_yaw_velocity'] + ['kalman_position_x']+ ['kalman_position_y'])
 
     all_measures_read = False
     imu_theta_received = 0.0
@@ -31,11 +31,14 @@ with open('file.csv', 'wb') as csvfile:
     imu_accel_measure_received = 0.0
     accel_mss_x = 0.0
     accel_mss_y = 0.0
+    gps_speed = 0.0
+    gps_says_robot_moving = 1
+    moving_motors = 1
 
     for line in f.readlines():
 
         if(all_measures_read or imu_reseted==1.0):
-            spamwriter.writerow([time] + [dt] + [imu_reseted] + [gps_position_received] + [initial_heading] + [gps_x] + [gps_y] + [om_gauche] + [om_droit] + [meca_position_measure_received] + [meca_fiab] + [meca_position_x] + [meca_position_y] + [meca_velocity_x] + [visu_position_measure_received] + [visu_fiab] + [visu_position_x] + [visu_position_y] + [visu_velocity_measure_received] + [visu_velocity_x] + [visu_velocity_y] + [imu_accel_measure_received] + [accel_mss_x] + [accel_mss_y] + [imu_theta_received] + [imu_theta] + [imu_yaw_velocity] + [kalman_position_x] + [kalman_position_y])
+            spamwriter.writerow([time] + [dt] + [imu_reseted] + [gps_position_received] + [initial_heading] + [gps_x] + [gps_y] + [gps_speed] + [gps_says_robot_moving] + [moving_motors] + [om_gauche] + [om_droit] + [meca_position_measure_received] + [meca_fiab] + [meca_position_x] + [meca_position_y] + [meca_velocity_x] + [visu_position_measure_received] + [visu_fiab] + [visu_position_x] + [visu_position_y] + [visu_velocity_measure_received] + [visu_velocity_x] + [visu_velocity_y] + [imu_accel_measure_received] + [accel_mss_x] + [accel_mss_y] + [imu_theta_received] + [imu_theta] + [imu_yaw_velocity] + [kalman_position_x] + [kalman_position_y])
             imu_reseted = 0.0
             all_measures_read = False
 
@@ -58,6 +61,15 @@ with open('file.csv', 'wb') as csvfile:
 
         if ("gps_position.y" in line):
             gps_y = eval(line.split(" ")[-1])
+
+        if ("SensorFusion::GPS_SPEED_km_h" in line):
+            gps_speed = eval(line.split(" ")[-1])
+
+        if ("gps_says_robot_moving" in line):
+            gps_says_robot_moving = eval(line.split(" ")[-1])
+
+        if ("SensorFusion moving motors :" in line):
+            moving_motors = eval(line.split(" ")[-1])
 
         if ("meca_position.x" in line):
             meca_position_measure_received = eval(line.split(" ")[4])

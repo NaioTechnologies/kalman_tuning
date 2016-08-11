@@ -117,7 +117,7 @@ if(len(sys.argv)>1):
 ############################################
 ###	  Récupération des mesures Excel	 ###
 ############################################
-time, dt, imu_reseted, gps_position_received, initial_heading, gps_x, gps_y, om_gauche, om_droit, meca_position_measure_received, meca_fiab, meca_position_x, meca_position_y, meca_velocity_x, visu_position_measure_received, visu_fiab, visu_position_x, visu_position_y, visu_velocity_measure_received, visu_velocity_x, visu_velocity_y, imu_accel_measure_received, accel_mss_x, accel_mss_y, imu_theta_received, imu_theta, imu_yaw_velocity, kalman_position_x, kalman_position_y = np.loadtxt(input_file_path, delimiter=';', unpack=True, skiprows=1)
+time, dt, imu_reseted, gps_position_received, initial_heading, gps_x, gps_y, gps_speed, gps_says_robot_moving, moving_motors, om_gauche, om_droit, meca_position_measure_received, meca_fiab, meca_position_x, meca_position_y, meca_velocity_x, visu_position_measure_received, visu_fiab, visu_position_x, visu_position_y, visu_velocity_measure_received, visu_velocity_x, visu_velocity_y, imu_accel_measure_received, accel_mss_x, accel_mss_y, imu_theta_received, imu_theta, imu_yaw_velocity, kalman_position_x, kalman_position_y = np.loadtxt(input_file_path, delimiter=';', unpack=True, skiprows=1)
 
 abscisse = []
 for i in range(len(time)):
@@ -220,159 +220,161 @@ for i in range(len(time)):
 	# print "process_noise_cov_matrix_q_"
 	# print process_noise_cov_matrix_q_
 
-	############################################
-	###	  Measurement Update (Correction)	 ###
-	############################################
+	if(gps_says_robot_moving[i] and moving_motors[i]):
 
-	if(meca_position_measure_received[i]):
-		if(meca_fiab[i]<0.001):
-			meca_fiab[i] = 0.001
-	else:
-		meca_fiab[i] = 1.0
+		############################################
+		###	  Measurement Update (Correction)	 ###
+		############################################
 
-	if(visu_position_measure_received[i]):
-		if(visu_fiab[i]<0.001):
-			visu_fiab[i] = 0.001
-	else:
-		visu_fiab[i] = 1.0
+		if(meca_position_measure_received[i]):
+			if(meca_fiab[i]<0.001):
+				meca_fiab[i] = 0.001
+		else:
+			meca_fiab[i] = 1.0
 
-	# meca_fiab[i] =1.0
-	# visu_fiab[i]=1.0
+		if(visu_position_measure_received[i]):
+			if(visu_fiab[i]<0.001):
+				visu_fiab[i] = 0.001
+		else:
+			visu_fiab[i] = 1.0
 
-	measurement_noise_cov_matrix_r_ = np.matrix(np.zeros((5,5)))
-	# measurement_noise_cov_matrix_r_[0,0] = 2.0 * 2.0 # σ²xgps
-	# measurement_noise_cov_matrix_r_[1,1] = 2.0 * 2.0 # σ²ygps
-	# measurement_noise_cov_matrix_r_[2,2] = 0.1 * 0.1 / (meca_fiab[i] * meca_fiab[i]) # σ²vxrOM
-	# measurement_noise_cov_matrix_r_[3,3] = 0.2 * 0.2 / ( visu_fiab[i] * visu_fiab[i])# σ²vxrOV
-	# measurement_noise_cov_matrix_r_[4,4] = 0.1 * 0.1 / ( visu_fiab[i] * visu_fiab[i])# σ²vyrOV
+		# meca_fiab[i] =1.0
+		# visu_fiab[i]=1.0
 
-	# measurement_noise_cov_matrix_r_[0,0] = 0.4 * 0.4 # σ²xgps
-	# measurement_noise_cov_matrix_r_[1,1] = 0.4 * 0.4 # σ²ygps
-	# measurement_noise_cov_matrix_r_[2,2] = 0.1 * 0.1 * (meca_fiab[i] * meca_fiab[i])  # σ²vxrOM
-	# measurement_noise_cov_matrix_r_[3,3] = 0.2 * 0.2 * ( visu_fiab[i] * visu_fiab[i]) # σ²vxrOV
-	# measurement_noise_cov_matrix_r_[4,4] = 0.1 * 0.1 * ( visu_fiab[i] * visu_fiab[i]) # σ²vyrOV
+		measurement_noise_cov_matrix_r_ = np.matrix(np.zeros((5,5)))
+		# measurement_noise_cov_matrix_r_[0,0] = 2.0 * 2.0 # σ²xgps
+		# measurement_noise_cov_matrix_r_[1,1] = 2.0 * 2.0 # σ²ygps
+		# measurement_noise_cov_matrix_r_[2,2] = 0.1 * 0.1 / (meca_fiab[i] * meca_fiab[i]) # σ²vxrOM
+		# measurement_noise_cov_matrix_r_[3,3] = 0.2 * 0.2 / ( visu_fiab[i] * visu_fiab[i])# σ²vxrOV
+		# measurement_noise_cov_matrix_r_[4,4] = 0.1 * 0.1 / ( visu_fiab[i] * visu_fiab[i])# σ²vyrOV
 
-	measurement_noise_cov_matrix_r_[0,0] = 1.0*1.0 # σ²xgps
-	measurement_noise_cov_matrix_r_[1,1] = 1.0*1.0 # σ²ygps
-	measurement_noise_cov_matrix_r_[2,2] = (-0.016*meca_fiab[i]+0.02)**2 # σ²vxrOM
-	measurement_noise_cov_matrix_r_[3,3] = (-0.1*visu_fiab[i]+0.11)**2 # σ²vxrOV
-	measurement_noise_cov_matrix_r_[4,4] = (-0.016*visu_fiab[i]+0.02)**2 # σ²vyrOV
+		# measurement_noise_cov_matrix_r_[0,0] = 0.4 * 0.4 # σ²xgps
+		# measurement_noise_cov_matrix_r_[1,1] = 0.4 * 0.4 # σ²ygps
+		# measurement_noise_cov_matrix_r_[2,2] = 0.1 * 0.1 * (meca_fiab[i] * meca_fiab[i])  # σ²vxrOM
+		# measurement_noise_cov_matrix_r_[3,3] = 0.2 * 0.2 * ( visu_fiab[i] * visu_fiab[i]) # σ²vxrOV
+		# measurement_noise_cov_matrix_r_[4,4] = 0.1 * 0.1 * ( visu_fiab[i] * visu_fiab[i]) # σ²vyrOV
 
-	# if(time[i]>= 1470066058993 and time[i]<=1470066097993):
-		# if(visu_velocity_measure_received[i]):
-		# 	print (-0.1*visu_fiab[i]+0.11)**2, (-0.016*visu_fiab[i]+0.02)**2
-		# measurement_noise_cov_matrix_r_[4,4] = 0.01 * 0.01
+		measurement_noise_cov_matrix_r_[0,0] = 1.0*1.0 # σ²xgps
+		measurement_noise_cov_matrix_r_[1,1] = 1.0*1.0 # σ²ygps
+		measurement_noise_cov_matrix_r_[2,2] = (-0.016*meca_fiab[i]+0.02)**2 # σ²vxrOM
+		measurement_noise_cov_matrix_r_[3,3] = (-0.1*visu_fiab[i]+0.11)**2 # σ²vxrOV
+		measurement_noise_cov_matrix_r_[4,4] = (-0.016*visu_fiab[i]+0.02)**2 # σ²vyrOV
 
-
-
-	measurement_matrix_y_ = np.matrix(np.zeros(5)).transpose()
-
-	predicted_measurement_h = np.matrix(np.zeros(5)).transpose()
-
-	# np.matrix(np.zeros((5,1)))
-	predicted_measurement_h[0] = predicted_state_matrix_x_[0] * cos(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * sin(predicted_state_matrix_x_[5]) + offset_gps*cos(predicted_state_matrix_x_[4] + predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[6]
-	predicted_measurement_h[1] = predicted_state_matrix_x_[0] * sin(predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[1] * cos(predicted_state_matrix_x_[5]) + offset_gps*sin(predicted_state_matrix_x_[4] + predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[7]
-	predicted_measurement_h[2] = predicted_state_matrix_x_[2]
-	predicted_measurement_h[3] = predicted_state_matrix_x_[2]
-	predicted_measurement_h[4] = predicted_state_matrix_x_[3]
+		# if(time[i]>= 1470066058993 and time[i]<=1470066097993):
+			# if(visu_velocity_measure_received[i]):
+			# 	print (-0.1*visu_fiab[i]+0.11)**2, (-0.016*visu_fiab[i]+0.02)**2
+			# measurement_noise_cov_matrix_r_[4,4] = 0.01 * 0.01
 
 
- 	#  	Dérivée de h(X) selon X
-	#                 x          y     vxr vyr  Θ             Θ₀
-	# 	Hk+1 = / cos(θ₀) ; -sin(θ₀) ; 0 ; 0 ; 0 ; -x*sin(θ₀) - y*cos(θ₀) \
-	# 	       | sin(θ₀) ;  cos(θ₀) ; 0 ; 0 ; 0 ;  x*cos(θ₀) - y*sin(θ₀) |
-	# 	       | 0       ;  0       ; 1 ; 0 ; 0 ;  0                     |
-	# 	       | 0       ;  0       ; 1 ; 0 ; 0 ;  0                     |
-	# 	       \ 0       ;  0       ; 0 ; 1 ; 0 ;  0                     /
 
-	jacobian_measurement_matrix_h_[0,0] = cos(predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[0,1] = -sin(predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[0,4] = -offset_gps*sin(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[0,5] = -predicted_state_matrix_x_[0] * sin(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * cos(predicted_state_matrix_x_[5]) - offset_gps*sin(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[0,6] = 1.0
+		measurement_matrix_y_ = np.matrix(np.zeros(5)).transpose()
 
-	jacobian_measurement_matrix_h_[1,0] = sin(predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[1,1] = cos(predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[1,4] = offset_gps*cos(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[1,5] = predicted_state_matrix_x_[0] * cos(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * sin(predicted_state_matrix_x_[5]) + offset_gps*cos(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
-	jacobian_measurement_matrix_h_[1,7] = 1.0
+		predicted_measurement_h = np.matrix(np.zeros(5)).transpose()
 
-	jacobian_measurement_matrix_h_[2,2] = 1.0
-	jacobian_measurement_matrix_h_[3,2] = 1.0
-	jacobian_measurement_matrix_h_[4,3] = 1.0
+		# np.matrix(np.zeros((5,1)))
+		predicted_measurement_h[0] = predicted_state_matrix_x_[0] * cos(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * sin(predicted_state_matrix_x_[5]) + offset_gps*cos(predicted_state_matrix_x_[4] + predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[6]
+		predicted_measurement_h[1] = predicted_state_matrix_x_[0] * sin(predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[1] * cos(predicted_state_matrix_x_[5]) + offset_gps*sin(predicted_state_matrix_x_[4] + predicted_state_matrix_x_[5]) + predicted_state_matrix_x_[7]
+		predicted_measurement_h[2] = predicted_state_matrix_x_[2]
+		predicted_measurement_h[3] = predicted_state_matrix_x_[2]
+		predicted_measurement_h[4] = predicted_state_matrix_x_[3]
 
-	if(om_gauche[i]==0 and om_droit[i]==0):
-		gps_position_received[i] = False
-		# visu_velocity_measure_received[i] = False
 
-	if(fabs(visu_velocity_x[i])>0.55 or fabs(visu_velocity_y[i])>0.55):
-		visu_velocity_measure_received[i] = False
-		visu_position_measure_received[i] = False
+	 	#  	Dérivée de h(X) selon X
+		#                 x          y     vxr vyr  Θ             Θ₀
+		# 	Hk+1 = / cos(θ₀) ; -sin(θ₀) ; 0 ; 0 ; 0 ; -x*sin(θ₀) - y*cos(θ₀) \
+		# 	       | sin(θ₀) ;  cos(θ₀) ; 0 ; 0 ; 0 ;  x*cos(θ₀) - y*sin(θ₀) |
+		# 	       | 0       ;  0       ; 1 ; 0 ; 0 ;  0                     |
+		# 	       | 0       ;  0       ; 1 ; 0 ; 0 ;  0                     |
+		# 	       \ 0       ;  0       ; 0 ; 1 ; 0 ;  0                     /
 
-	if(fabs(meca_velocity_x[i])>0.55):
-		meca_position_measure_received[i] = False
+		jacobian_measurement_matrix_h_[0,0] = cos(predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[0,1] = -sin(predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[0,4] = -offset_gps*sin(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[0,5] = -predicted_state_matrix_x_[0] * sin(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * cos(predicted_state_matrix_x_[5]) - offset_gps*sin(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[0,6] = 1.0
 
-	# gps_position_received[i] = False
+		jacobian_measurement_matrix_h_[1,0] = sin(predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[1,1] = cos(predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[1,4] = offset_gps*cos(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[1,5] = predicted_state_matrix_x_[0] * cos(predicted_state_matrix_x_[5]) - predicted_state_matrix_x_[1] * sin(predicted_state_matrix_x_[5]) + offset_gps*cos(predicted_state_matrix_x_[4]+predicted_state_matrix_x_[5])
+		jacobian_measurement_matrix_h_[1,7] = 1.0
 
-	if( not gps_position_received[i] ):
-		jacobian_measurement_matrix_h_[0,0] = 0.0
-		jacobian_measurement_matrix_h_[0,1] = 0.0
-		jacobian_measurement_matrix_h_[0,5] = 0.0
-		jacobian_measurement_matrix_h_[0,6] = 0.0
-		jacobian_measurement_matrix_h_[0,7] = 0.0
+		jacobian_measurement_matrix_h_[2,2] = 1.0
+		jacobian_measurement_matrix_h_[3,2] = 1.0
+		jacobian_measurement_matrix_h_[4,3] = 1.0
 
-		jacobian_measurement_matrix_h_[1,0] = 0.0
-		jacobian_measurement_matrix_h_[1,1] = 0.0
-		jacobian_measurement_matrix_h_[1,5] = 0.0
-		jacobian_measurement_matrix_h_[1,6] = 0.0
-		jacobian_measurement_matrix_h_[1,7] = 0.0
+		if(om_gauche[i]==0 and om_droit[i]==0):
+			gps_position_received[i] = False
+			# visu_velocity_measure_received[i] = False
 
-		predicted_measurement_h[0] = 0.0
-		predicted_measurement_h[1] = 0.0
+		if(fabs(visu_velocity_x[i])>0.55 or fabs(visu_velocity_y[i])>0.55):
+			visu_velocity_measure_received[i] = False
+			visu_position_measure_received[i] = False
 
-	else:
-		measurement_matrix_y_[0] = gps_x[i]
-		measurement_matrix_y_[1] = gps_y[i]
-		predicted_gps_x.append(predicted_measurement_h.item(0))
-		predicted_gps_y.append(predicted_measurement_h.item(1))
+		if(fabs(meca_velocity_x[i])>0.55):
+			meca_position_measure_received[i] = False
 
-	# visu_position_measure_received[i] = False
-	if( not visu_position_measure_received[i] ):
-		jacobian_measurement_matrix_h_[3,2] = 0.0
-		jacobian_measurement_matrix_h_[4,3] = 0.0
+		# gps_position_received[i] = False
 
-		predicted_measurement_h[3] = 0.0
-		predicted_measurement_h[4] = 0.0
-	else:
-		measurement_matrix_y_[3] = visu_velocity_x[i]
-		measurement_matrix_y_[4] = visu_velocity_y[i]
-		moy_visu_vel = moy_visu_vel + abs(visu_velocity_x[i])
-		visu_cpt = visu_cpt +1
+		if( not gps_position_received[i] ):
+			jacobian_measurement_matrix_h_[0,0] = 0.0
+			jacobian_measurement_matrix_h_[0,1] = 0.0
+			jacobian_measurement_matrix_h_[0,5] = 0.0
+			jacobian_measurement_matrix_h_[0,6] = 0.0
+			jacobian_measurement_matrix_h_[0,7] = 0.0
 
-	# meca_position_measure_received[i] = False
-	if( not meca_position_measure_received[i] ):
-		jacobian_measurement_matrix_h_[2,2] = 0.0
+			jacobian_measurement_matrix_h_[1,0] = 0.0
+			jacobian_measurement_matrix_h_[1,1] = 0.0
+			jacobian_measurement_matrix_h_[1,5] = 0.0
+			jacobian_measurement_matrix_h_[1,6] = 0.0
+			jacobian_measurement_matrix_h_[1,7] = 0.0
 
-		predicted_measurement_h[2] = 0.0
-	else:
-		measurement_matrix_y_[2] = meca_velocity_x[i]
-		moy_meca_vel = moy_meca_vel + abs(meca_velocity_x[i])
-		meca_cpt = meca_cpt + 1
+			predicted_measurement_h[0] = 0.0
+			predicted_measurement_h[1] = 0.0
 
-	#  υk+1 = Ym + h( Xk+1|k )
-	innovation_matrix = measurement_matrix_y_ - predicted_measurement_h
+		else:
+			measurement_matrix_y_[0] = gps_x[i]
+			measurement_matrix_y_[1] = gps_y[i]
+			predicted_gps_x.append(predicted_measurement_h.item(0))
+			predicted_gps_y.append(predicted_measurement_h.item(1))
 
-	#  Sk+1 = Hk+1 * Pk+1|k * Hk+1t + Rk+1
-	innovation_cov_matrix_s = (jacobian_measurement_matrix_h_ * predicted_state_variance_matrix_p_ * jacobian_measurement_matrix_h_.transpose()) + measurement_noise_cov_matrix_r_
+		# visu_position_measure_received[i] = False
+		if( not visu_position_measure_received[i] ):
+			jacobian_measurement_matrix_h_[3,2] = 0.0
+			jacobian_measurement_matrix_h_[4,3] = 0.0
 
-	#  Kk+1 = Pk+1|k * Hk+1t * S⁻¹k+1
-	kalman_gain_matrix_k = predicted_state_variance_matrix_p_ * jacobian_measurement_matrix_h_.transpose() * np.linalg.inv(innovation_cov_matrix_s)
+			predicted_measurement_h[3] = 0.0
+			predicted_measurement_h[4] = 0.0
+		else:
+			measurement_matrix_y_[3] = visu_velocity_x[i]
+			measurement_matrix_y_[4] = visu_velocity_y[i]
+			moy_visu_vel = moy_visu_vel + abs(visu_velocity_x[i])
+			visu_cpt = visu_cpt +1
 
-	#  Xk+1|k+1 = Xk+1|k + Kk+1 * υk+1
-	estimated_state_matrix_x_ = predicted_state_matrix_x_ + (kalman_gain_matrix_k * innovation_matrix)
+		# meca_position_measure_received[i] = False
+		if( not meca_position_measure_received[i] ):
+			jacobian_measurement_matrix_h_[2,2] = 0.0
 
-	#  Pk+1|k+1 = (I - Kk+1 * Hk+1)*Pk+1|k
-	estimated_state_variance_matrix_p_ = ( np.matrix(np.eye(8)) - (kalman_gain_matrix_k * jacobian_measurement_matrix_h_) ) * predicted_state_variance_matrix_p_
+			predicted_measurement_h[2] = 0.0
+		else:
+			measurement_matrix_y_[2] = meca_velocity_x[i]
+			moy_meca_vel = moy_meca_vel + abs(meca_velocity_x[i])
+			meca_cpt = meca_cpt + 1
+
+		#  υk+1 = Ym + h( Xk+1|k )
+		innovation_matrix = measurement_matrix_y_ - predicted_measurement_h
+
+		#  Sk+1 = Hk+1 * Pk+1|k * Hk+1t + Rk+1
+		innovation_cov_matrix_s = (jacobian_measurement_matrix_h_ * predicted_state_variance_matrix_p_ * jacobian_measurement_matrix_h_.transpose()) + measurement_noise_cov_matrix_r_
+
+		#  Kk+1 = Pk+1|k * Hk+1t * S⁻¹k+1
+		kalman_gain_matrix_k = predicted_state_variance_matrix_p_ * jacobian_measurement_matrix_h_.transpose() * np.linalg.inv(innovation_cov_matrix_s)
+
+		#  Xk+1|k+1 = Xk+1|k + Kk+1 * υk+1
+		estimated_state_matrix_x_ = predicted_state_matrix_x_ + (kalman_gain_matrix_k * innovation_matrix)
+
+		#  Pk+1|k+1 = (I - Kk+1 * Hk+1)*Pk+1|k
+		estimated_state_variance_matrix_p_ = ( np.matrix(np.eye(8)) - (kalman_gain_matrix_k * jacobian_measurement_matrix_h_) ) * predicted_state_variance_matrix_p_
 
 	###################
 	###	  Affichage	###
