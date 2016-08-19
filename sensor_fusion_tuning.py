@@ -117,7 +117,7 @@ if(len(sys.argv)>1):
 ############################################
 ###	  Récupération des mesures Excel	 ###
 ############################################
-time, dt, imu_reseted, gps_position_received, initial_heading, gps_x, gps_y, gps_speed, gps_says_robot_moving, moving_motors, om_gauche, om_droit, meca_position_measure_received, meca_fiab, meca_position_x, meca_position_y, meca_velocity_x, visu_position_measure_received, visu_fiab, visu_position_x, visu_position_y, visu_velocity_measure_received, visu_velocity_x, visu_velocity_y, imu_accel_measure_received, accel_mss_x, accel_mss_y, imu_theta_received, imu_theta, imu_yaw_velocity, kalman_position_x, kalman_position_y = np.loadtxt(input_file_path, delimiter=';', unpack=True, skiprows=1)
+time, dt, imu_reseted, gps_position_received, initial_heading, gps_x, gps_y, gps_speed, gps_says_robot_moving, moving_motors, om_gauche, om_droit, meca_position_measure_received, meca_fiab, meca_position_x, meca_position_y, meca_velocity_x, visu_position_measure_received, visu_fiab, visu_position_x, visu_position_y, visu_velocity_measure_received, visu_velocity_x, visu_velocity_y, imu_accel_measure_received, accel_mss_x, accel_mss_y, imu_theta_received, imu_theta, kalman_theta, imu_yaw_velocity, kalman_position_x, kalman_position_y = np.loadtxt(input_file_path, delimiter=';', unpack=True, skiprows=1)
 
 abscisse = []
 for i in range(len(time)):
@@ -472,12 +472,13 @@ ax1 = fig1.add_subplot(111)
 plt.axis('equal')
 fig1.canvas.set_window_title('Positions')
 plt.gca().invert_xaxis()
-plt.plot(kalman_y, kalman_x, 'rx-', label="kalman")
+# plt.plot(kalman_y, kalman_x, 'rx-', label="kalman") #kalman simu
+plt.plot(kalman_position_y, kalman_position_x, 'rx-', label="kalman") #kalman robot
 plt.plot(meca_position_y, meca_position_x, 'gx-', label="meca")
 plt.plot(visu_position_y, visu_position_x, 'bx-', label="visu")
-plt.plot(predicted_gps_y, predicted_gps_x, 'ko-', label="gps predicted")
+# plt.plot(predicted_gps_y, predicted_gps_x, 'ko-', label="gps predicted")
 
-plt.plot(gps_y, gps_x, 'yo-', label="gps")
+# plt.plot(gps_y, gps_x, 'yo-', label="gps")
 # plt.plot(prediction_y, prediction_x, 'kx-', label="prediction")
 
 plt.legend(loc='best')

@@ -1,0 +1,7 @@
+Test effectué:
+- grand huit sur le parking avec retour en position de départ.
+
+Résultats:
+- Kalman: position d'arrivee à 37cm du point de départ
+- Meca: position d'arrivee à 1m05 du point de départ
+- Visu: position d'arrivee à 2m47 du point de départ
