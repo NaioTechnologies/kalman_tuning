@@ -473,12 +473,12 @@ plt.axis('equal')
 fig1.canvas.set_window_title('Positions')
 plt.gca().invert_xaxis()
 # plt.plot(kalman_y, kalman_x, 'rx-', label="kalman") #kalman simu
-plt.plot(kalman_position_y, kalman_position_x, 'rx-', label="kalman") #kalman robot
+plt.plot(kalman_position_y, kalman_position_x, 'rx-', label="kalman") #kalman robot !!! le simulateur n'est pas tout à fait a jour, on affiche plutot le kalman robot !!!
 plt.plot(meca_position_y, meca_position_x, 'gx-', label="meca")
 plt.plot(visu_position_y, visu_position_x, 'bx-', label="visu")
-# plt.plot(predicted_gps_y, predicted_gps_x, 'ko-', label="gps predicted")
+plt.plot(predicted_gps_y, predicted_gps_x, 'ko-', label="gps predicted")
 
-# plt.plot(gps_y, gps_x, 'yo-', label="gps")
+plt.plot(gps_y, gps_x, 'yo-', label="gps")
 # plt.plot(prediction_y, prediction_x, 'kx-', label="prediction")
 
 plt.legend(loc='best')
